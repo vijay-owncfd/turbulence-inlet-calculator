@@ -20,6 +20,7 @@ st.markdown(
     "Select your model and application type from the sidebar to begin. \n Born on "
     "7th Sep 2025 to Vijay and Gemini. Last update 7th Sep 2025."
 )
+st.subtitle("Vijay and Gemini")
 
 # --- Sidebar for Core Inputs ---
 with st.sidebar:
