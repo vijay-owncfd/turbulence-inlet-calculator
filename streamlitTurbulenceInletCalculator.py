@@ -61,7 +61,7 @@ if app_choice in [1, 2]:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("Inlet Geometry")
+        st.subheader("Inlet Geometry - vijay")
         cross_sec_options = {
             1: "Circular", 2: "Annular", 3: "Square", 4: "Rectangular",
             5: "2D Channel", 6: "Other (Area/Perimeter)", 7: "Specified Hydraulic Diameter"
