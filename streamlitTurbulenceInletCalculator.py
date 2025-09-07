@@ -12,15 +12,28 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- Main App ---
+# --- Helper Function for Robust Float Input ---
+def validated_text_input(label, default_value, key=None):
+    """
+    Uses st.text_input for flexible entry and validates that the input
+    is a positive float. Displays an error and stops execution if invalid.
+    """
+    user_input = st.text_input(label, value=str(default_value), key=key)
+    try:
+        val = float(user_input)
+        if val <= 0:
+            st.error(f"Input for '{label}' must be a positive number. You entered: {val}")
+            st.stop()
+        return val
+    except (ValueError, TypeError):
+        st.error(f"Invalid numeric input for '{label}'. Please enter a number like 0.01 or 1e-2.")
+        st.stop()
 
+
+# --- Main App ---
 st.title("💨 Turbulence Inlet Conditions Calculator")
-st.subheader("Vijay and Gemini")
-st.markdown(
-    "A web-based utility to calculate turbulent boundary conditions for CFD simulations. "
-    "Select your model and application type from the sidebar to begin. \n Born on "
-    "7th Sep 2025 to Vijay and Gemini. Last update 7th Sep 2025."
-)
+st.subheader("A web-based utility to calculate turbulent boundary conditions for CFD simulations.")
+st.markdown("Select your model and application type from the sidebar to begin.")
 
 # --- Sidebar for Core Inputs ---
 with st.sidebar:
@@ -48,12 +61,11 @@ with st.sidebar:
     )
 
     st.header("2. Fluid Properties")
-    # Using general format specifiers (%f, %g) to prevent input issues
-    rho = st.number_input("Density (ρ) in kg/m³", min_value=1e-9, value=1.225, format="%f", step=None)
-    mu = st.number_input("Dynamic Viscosity (μ) in Pa-s", min_value=1e-9, value=1.81e-5, format="%g", step=None)
+    rho = validated_text_input("Density (ρ) in kg/m³", 1.225)
+    mu = validated_text_input("Dynamic Viscosity (μ) in Pa-s", 1.81e-5)
+
 
 # --- Main Panel for Detailed Inputs and Results ---
-
 # Initialize variables
 Dh, A, U, l, I, visc_rat, k, omega, epsilon, Re = (None,) * 10
 is_2d_channel = False
@@ -77,12 +89,12 @@ if app_choice in [1, 2]:
 
         # Conditional Geometry Inputs
         if cross_sec_choice == 1: # Circular
-            diam = st.number_input("Diameter (m)", min_value=1e-9, value=1.0, format="%f", step=None)
+            diam = validated_text_input("Diameter (m)", 1.0)
             Dh = diam
             A = (math.pi / 4) * diam**2
         elif cross_sec_choice == 2: # Annular
-            Din = st.number_input("Inner Diameter (m)", min_value=1e-9, value=0.5, format="%f", step=None)
-            Dout = st.number_input("Outer Diameter (m)", min_value=1e-9, value=1.0, format="%f", step=None)
+            Din = validated_text_input("Inner Diameter (m)", 0.5)
+            Dout = validated_text_input("Outer Diameter (m)", 1.0)
             if Dout > Din:
                 Dh = Dout - Din
                 A = (math.pi / 4) * (Dout**2 - Din**2)
@@ -90,26 +102,26 @@ if app_choice in [1, 2]:
                 st.error("Outer diameter must be greater than inner diameter.")
                 st.stop()
         elif cross_sec_choice == 3: # Square
-            side = st.number_input("Side Length (m)", min_value=1e-9, value=1.0, format="%f", step=None)
+            side = validated_text_input("Side Length (m)", 1.0)
             Dh = side
             A = side**2
         elif cross_sec_choice == 4: # Rectangular
-            a = st.number_input("Width (m)", min_value=1e-9, value=2.0, format="%f", step=None)
-            b = st.number_input("Height (m)", min_value=1e-9, value=1.0, format="%f", step=None)
+            a = validated_text_input("Width (m)", 2.0)
+            b = validated_text_input("Height (m)", 1.0)
             Dh = 2 * a * b / (a + b)
             A = a * b
         elif cross_sec_choice == 5: # 2D Channel
-            a = st.number_input("Channel Height (m)", min_value=1e-9, value=1.0, format="%f", step=None)
+            a = validated_text_input("Channel Height (m)", 1.0)
             Dh = 2 * a
             A = None
             is_2d_channel = True
         elif cross_sec_choice == 6: # Other
-            A_in = st.number_input("Cross-sectional Area (m²)", min_value=1e-9, value=1.0, format="%f", step=None)
-            P_in = st.number_input("Wetted Perimeter (m)", min_value=1e-9, value=4.0, format="%f", step=None)
+            A_in = validated_text_input("Cross-sectional Area (m²)", 1.0)
+            P_in = validated_text_input("Wetted Perimeter (m)", 4.0)
             Dh = 4 * A_in / P_in
             A = A_in
         elif cross_sec_choice == 7: # Specified Dh
-            Dh = st.number_input("Hydraulic Diameter (m)", min_value=1e-9, value=1.0, format="%f", step=None)
+            Dh = validated_text_input("Hydraulic Diameter (m)", 1.0)
             A = (math.pi / 4) * Dh**2
             st.info("Area is assumed based on a circular cross-section for flow rate calculations.")
 
@@ -117,8 +129,7 @@ if app_choice in [1, 2]:
         st.subheader("Flow Rate / Velocity")
         if is_2d_channel:
             st.info("For a 2D channel, only velocity can be specified.")
-            U_in = st.number_input("Inlet Velocity (m/s)", min_value=1e-9, value=10.0, format="%f", step=None)
-            U = U_in
+            U = validated_text_input("Inlet Velocity (m/s)", 10.0)
         else:
             vel_type_options = {1: "Velocity", 2: "Mass Flow Rate", 3: "Volume Flow Rate"}
             vel_type_choice = st.selectbox(
@@ -127,13 +138,12 @@ if app_choice in [1, 2]:
                 format_func=lambda x: vel_type_options[x]
             )
             if vel_type_choice == 1:
-                U_in = st.number_input("Velocity (m/s)", min_value=1e-9, value=10.0, format="%f", step=None)
-                U = U_in
+                U = validated_text_input("Velocity (m/s)", 10.0)
             elif vel_type_choice == 2:
-                mDot = st.number_input("Mass Flow Rate (kg/s)", min_value=1e-9, value=1.0, format="%f", step=None)
+                mDot = validated_text_input("Mass Flow Rate (kg/s)", 1.0)
                 U = mDot / (rho * A)
             elif vel_type_choice == 3:
-                QDot = st.number_input("Volume Flow Rate (m³/s)", min_value=1e-9, value=1.0, format="%f", step=None)
+                QDot = validated_text_input("Volume Flow Rate (m³/s)", 1.0)
                 U = QDot / A
 
     st.subheader("Turbulence Generation")
@@ -159,12 +169,10 @@ if app_choice in [1, 2]:
             delta_99 = Dh / 2.0
             st.write(f"Estimated δ for fully developed flow: **{delta_99:.4g} m**")
         else:
-            delta_99 = st.number_input("Boundary Layer Thickness (m)", min_value=1e-9, value=0.1, format="%f", step=None)
+            delta_99 = validated_text_input("Boundary Layer Thickness (m)", 0.1)
         l = 0.4 * delta_99
     elif l_choice == 3:
-        l_in = st.number_input("Characteristic Length (m)", min_value=1e-9, value=0.01, format="%f", step=None)
-        l = l_in
-
+        l = validated_text_input("Characteristic Length (m)", 0.01)
 
 # --- Case 2: External / General Flows ---
 else:
@@ -179,7 +187,7 @@ else:
     
     if model_choice > 1:
         st.write("To compute Dirichlet values (k, ω, ε), a reference velocity is needed.")
-        U = st.number_input("Reference Velocity (U_ref) in m/s", min_value=1e-9, value=10.0, format="%f", step=None)
+        U = validated_text_input("Reference Velocity (U_ref) in m/s", 10.0)
 
 
 # --- Calculation Trigger ---
