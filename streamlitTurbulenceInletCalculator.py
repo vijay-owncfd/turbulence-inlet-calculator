@@ -17,7 +17,8 @@ st.set_page_config(
 st.title("💨 Turbulence Inlet Conditions Calculator")
 st.markdown(
     "A web-based utility to calculate turbulent boundary conditions for CFD simulations. "
-    "Select your model and application type from the sidebar to begin."
+    "Select your model and application type from the sidebar to begin. \n Born on "
+    "7th Sep 2025 to Vijay and Gemini. Last update 7th Sep 2025."
 )
 
 # --- Sidebar for Core Inputs ---
