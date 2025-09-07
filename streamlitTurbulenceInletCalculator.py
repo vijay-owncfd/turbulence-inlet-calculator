@@ -34,7 +34,7 @@ def validated_text_input(label, default_value, key=None):
 st.title("💨 Turbulence Inlet Conditions Calculator")
 st.subheader("A web-based utility to calculate turbulent boundary conditions for CFD simulations.")
 st.markdown("Born to Vijay and Gemini on 7th Sep 2025. Last updated: 7th Sep 2025.")
-st.markdown("Select your model and application type from the sidebar to begin.")
+st.header("⬅️  Select your model and application type from the sidebar to begin.")
 
 # --- Sidebar for Core Inputs ---
 with st.sidebar:
